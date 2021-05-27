@@ -1,10 +1,13 @@
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
+from tkinter.ttk import *
 import os
 import re
 from datetime import datetime
 from datetime import date
+import time
+from time import strftime
 import sys
 
 width = 0.06 - 0.01
@@ -29,14 +32,19 @@ edited_prices_name = []
 entry = []
 orders_list = []
 edit_value = 0
-color_interface = "#007399"
-contrast_color_interface = "#8080ff"
+color_interface = "#d9d9d9"
+contrast_color_interface = "#f2f2f2"
 frame = []
 type_entrace = " "
 entry_dict = {}
 time_elapsed = " "
 exit_condition = 0
 total_value = 0
+index = 0
+new_date = ""
+order_str = ""
+foo2 = []
+
 
 # esto guarda los datos en txt files
 my_name = open("names.txt", "r+")
@@ -51,35 +59,81 @@ date_file = open("dates.txt", "r+")
 dates = date_file.readlines()
 date_file.close()
 
+orders_file = open("order.txt", "r+")
+
+for line in orders_file:
+    stripped_line_order = line.strip()
+    line_list_orders = stripped_line_order.split()
+    orders_list.append(line_list_orders)
+
+orders_file.close()
+
+
 # this show the menu for clients
+def show_orders():
+    global orders_list, prices_list, order_str, index, foo2
+    foo2.clear()
+    order_str = ""
+    order_list = orders_list[index]
+    print(orders_list[index])
+    cunt = 0
+    for i in range(len(order_list)):
+        foo = name_price[i] + " " + order_list[i]
+        print("Este foo no "+foo+"\n")
+        for element in range(len(foo)):
+            coun = foo[element].count("0")
+            cunt = cunt + coun
+
+            print(coun)
+        print("Este es el count"+str(cunt))
+        element = 0
+        if cunt == 0:
+            foo2.append(foo)
+            print("este foo se va a imprimir " + foo+"\n")
+        cunt = 0
+
+    for j in range(len(foo2)):
+        order_str = order_str + " " + foo2[j]
+
+
 def show_menu_clients():
-    global clients_names_list
+    global clients_names_list, order_str
+    var = IntVar()
+
     num_called = 1
-    clients_menu = tk.Listbox(canvas_menu_clients, width=36, height=34)
-    clients_menu.pack()
 
-    for i in range(len(clients_names_list)):
-        clients_menu.insert(i, clients_names_list[i])
-
-    def clients_interface(*args):
-        global clients_names_list, dates_list
+    def clients_interface(var):
+        global clients_names_list, dates_list, index, foo2
         nonlocal num_called
-        print(dates_list)
         num_called = num_called + 1
-        index = clients_menu.index(tk.ACTIVE)
+        index = var
         name_label = tk.Label(clients_frame, text="Nombre: " + clients_names_list[index])
-        print(index)
         name_label.grid(row=0, column=0)
-        rest_time_label = tk.Label(clients_frame)
         rest_time_label.grid(row=1, column=0)
-        calculate_time(index)
-        rest_time_label.config(text="El tiempo restante es: " + str(time_elapsed))
+        define_time()
+        rest_time_label.config(text="El tiempo restante es: " + str(time_elapsed), relief=RAISED, height=2)
+        description_message = tk.Message(clients_frame, text="Torta azul con rayas verdes, el agua es azul y tiene manchas marrones porque son todos re putos", bg="pink", relief=RAISED, width=400)
+        description_message.grid(row=3, column=0)
+        order_message = tk.Message(clients_frame, text=order_str, width=300, relief=RAISED)
+        order_message.grid(row=4, column=0)
         if num_called > 1:
+            tmp = []
+            tmp.append(name_label)
+            tmp.append(rest_time_label)
+            tmp.append(order_message)
+            tmp.clear()
             num_called = 0
-            name_label.config(text="                                                                              ")
+            name_label.destroy()
 
-    clients_menu.bind('<<ListboxSelect>>', clients_interface)
+        show_orders()
 
+    clients_menu = []
+    y = 0
+    for i in range(len(clients_names_list)):
+        clients_menu.append("clients_menu" + str(i))
+        clients_menu[i] = tk.Radiobutton(canvas_menu_clients, text=clients_names_list[i], variable=var, value=i, command=lambda :clients_interface(var.get()), bg=color_interface)
+        clients_menu[i].place(relx=0, rely=y , relwidth=1, relheight=0.07)
+        y = y + 0.07
 
 # this show the news products
 def show_products(type_entrace, row, tab):
@@ -94,17 +148,17 @@ def show_products(type_entrace, row, tab):
         label.append(prices[i] + "lbl" + str(i))
         entry.append("Spinbox" + str(i))
         labell.append(prices[i] + "lbll" + str(i))
-        label[i] = tk.Label(dict[tab], text=name_price[i], height =2)
+        label[i] = tk.Label(dict[tab], text=name_price[i], height =2, relief=RAISED, bg=color_interface)
         label[i].grid(row=row+1, column=0)
-        labell[i] = tk.Label(dict[tab], text=prices[i], height =2)
+        labell[i] = tk.Label(dict[tab], text=prices[i], height =2, relief=RAISED, bg=color_interface)
         labell[i].grid(row=row+1, column=1)
         if type_entrace == "button":
             button[i] = tk.Button(dict[tab], text="editar",
-                            command=lambda edit_value=i: data_remplacer_interface(edit_value))
+                            command=lambda edit_value=i: data_remplacer_interface(edit_value), relief=RAISED, bg=color_interface)
             button[i].grid(row=row+1, column=2)
         else:
 
-            entry[i] = tk.Spinbox(dict[tab], from_=0, to=1000, width=2)
+            entry[i] = tk.Spinbox(dict[tab], from_=0, to=1000, width=2, relief=RAISED, bg=color_interface)
             entry[i].grid(row=row+1, column=3)
             entry_dict[str(entry[i])] = entry[i]
         if exit_condition == 1:
@@ -125,15 +179,15 @@ def show_products(type_entrace, row, tab):
 
         total_value = sum(processed_record_values)
         processed_record_values.clear()
-        record_button_label.config(text="El total es: " + str(total_value))
+        record_button_label.config(text="El total es: " + str(total_value), relief=RAISED, bg=color_interface)
 
     if type_entrace != "button":
-        record_button = tk.Button(dict[tab], text="Calcular", command=lambda: get_amounts())
+        record_button = tk.Button(dict[tab], text="Calcular", command=lambda: get_amounts(), relief=RAISED, bg=color_interface)
         record_button.grid(row=row+2, column=0)
         record_button_label = tk.Label(dict[tab])
         record_button_label.grid(row=row + 2, column=1)
 
-        record_client_button = tk.Button(dict[tab], text="Registrar cliente", command=lambda: combine_funcs(clients_day_entry.get(),clients_hour_entry.get(), record_values, clients_name_entry.get(), description_entry.get()))
+        record_client_button = tk.Button(dict[tab], relief=RAISED,bg=color_interface, text="Registrar cliente", command=lambda: combine_funcs(clients_day_entry.get(),clients_hour_entry.get(), record_values, clients_name_entry.get(), description_entry.get()))
         record_client_button.grid(row=row+3, column=1)
 
 def manage_clients_orders(record_values):
@@ -145,15 +199,6 @@ def manage_clients_orders(record_values):
             my_orders.write(record_values[i] + " ")
     my_orders.write(" \n")
     my_orders.close()
-
-    orders_file = open("order.txt", "r+")
-
-    for line in orders_file:
-        stripped_line_order = line.strip()
-        line_list_orders = stripped_line_order.split()
-        orders_list.append(line_list_orders)
-
-    orders_file.close()
 
 
 def combine_funcs(clients_day_entry, clients_hour_entry, record_values, clients_name_entry, description_entry):
@@ -217,26 +262,40 @@ def update_list():
     prices_list = my_price.readlines()
     my_price.close()
 
-def calculate_time(index):
+def define_time():
 # this calculates the rest time to the delivery
-    global dates_list, time_elapsed
-    date_str = dates_list[index]
-    print(index)
-    print(type(dates_list[index]))
-    del dates_list[index][20]
-    date_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    now = datetime.now()
-    time_elapsed = date_dt - now
-    print(time_elapsed)
+    global dates_list, time_elapsed, index, new_date
+    new_date = ""
+    for i in range(19):
+        new_date = new_date + dates_list[int(index)][i]
+
+    calculate_time()
+
+
+now = ""
+
+
+def calculate_time():
+    global new_date, time_elapsed, now
+    new_date = datetime.strptime(new_date, '%Y-%m-%d %H:%M:%S')
+    now = strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.strptime(now, '%Y-%m-%d %H:%M:%S')
+    time_elapsed = new_date - now
+    #print_time()
+
+
+def print_time():
+    global new_date, time_elapsed
+    time_elapsed = new_date - now
+    root.after(1000, calculate_time())
+
 
 def manage_time(clients_day_entry, clients_hour_entry):
 # this calculates the rest time to the delivery
     global dates_list, time_elapsed, dates
     date_str = clients_day_entry + " " + clients_hour_entry + ":00"
     date_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    now = datetime.now()
-    time_elapsed = date_dt - now
-    print(time_elapsed)
+
 
 # this saves the dates
     date_file = open("dates.txt", "a+")
@@ -382,26 +441,23 @@ canvas_menu_clients = tk.Canvas(root, bg="green")
 canvas_menu_clients.place(relx=0.001, rely=0.001, relwidth=0.14, relheight=0.64)
 canvas_clients = tk.Canvas(root, bg="blue")
 canvas_clients.place(relx=0.15, rely=0, relwidth=0.61, relheight=0.65)
-style = ttk.Style()
-style.theme_create("MyStyle", parent="alt", settings={"TNotebook.Tab": {"configure": {"background": contrast_color_interface}, }})
-
-style.theme_use("MyStyle")
 
 
 # this is the tabs clients
 
-products_frame = tk.Frame(canvas_products)
+products_frame = tk.Frame(canvas_products, bg=contrast_color_interface)
 products_frame.place(relx=0.77, rely=0, relwidth=0.22, relheight=0.49)
 
-registration_frame = tk.Frame(canvas_registry)
+registration_frame = tk.Frame(canvas_registry, bg=contrast_color_interface)
 registration_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-clients_frame = tk.Frame(canvas_clients)
+clients_frame = tk.Frame(canvas_clients, bg=contrast_color_interface)
 clients_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-clients_menu_frame = tk.Frame(canvas_menu_clients, bg="red")
+clients_menu_frame = tk.Frame(canvas_menu_clients, bg=contrast_color_interface)
 clients_menu_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+rest_time_label = tk.Label(clients_frame, relief=RAISED)
 #products scrollbar
 scrollbar_products = ttk.Scrollbar(canvas_products, orient="vertical", command=canvas.yview)
 scrollbar_products.configure(command=canvas_products.yview)
@@ -427,44 +483,44 @@ canvas_registry.configure(yscrollcommand=scrollbar_registry.set)
 # this is the interface to add new products
 #frame_add = tk.Frame(products_frame, bg=contrast_color_interface)
 #frame_add.grid(row=0, column=0)
-priceAdd = tk.Label(products_frame, text="Agregar nueva receta: ")
+priceAdd = tk.Label(products_frame, text="Agregar nueva receta: ", relief=RAISED)
 priceAdd.grid(row=0, column=0)
-entryNameAdd = tk.Entry(products_frame)
+entryNameAdd = tk.Entry(products_frame, relief=RAISED)
 entryNameAdd.grid(row=1, column=0)
-entryPriceAdd = tk.Entry(products_frame)
+entryPriceAdd = tk.Entry(products_frame, relief=RAISED)
 entryPriceAdd.grid(row=1, column=1)
 buttonPriceAdd = tk.Button(products_frame, text="Confirmar",
-                           command=lambda: data_manager(entryNameAdd.get(), entryPriceAdd.get()))
+                           command=lambda: data_manager(entryNameAdd.get(), entryPriceAdd.get()), relief=RAISED)
 buttonPriceAdd.grid(row=1, column=2)
 
 show_products("button", 0, "products_frame")
 
 # this is the records tab
 # this is the interface for the clients creation tab
-new_clients_label = tk.Label(registration_frame, text="Registrar un nuevo cliente:")
+new_clients_label = tk.Label(registration_frame, text="Registrar un nuevo cliente:", relief=RAISED)
 new_clients_label.grid(row=0, column=0)
 # name
-clients_name_label = tk.Label(registration_frame, text="Nombre:")
+clients_name_label = tk.Label(registration_frame, text="Nombre:", relief=RAISED)
 clients_name_label.grid(row=1, column=0)
-clients_name_entry = tk.Entry(registration_frame, width=20)
+clients_name_entry = tk.Entry(registration_frame, width=20, relief=RAISED)
 clients_name_entry.grid(row=1, column=1)
 # date
 
-clients_date_label = tk.Label(registration_frame, text="Fecha de entrega:")
+clients_date_label = tk.Label(registration_frame, text="Fecha de entrega:", relief=RAISED)
 clients_date_label.grid(row=3, column=0)
-clients_day_entry = tk.Entry(registration_frame, width=20)
+clients_day_entry = tk.Entry(registration_frame, width=20, relief=RAISED)
 clients_day_entry.grid(row=3, column=1)
 
 
-clients_hour_label = tk.Label(registration_frame, text="Hora:")
+clients_hour_label = tk.Label(registration_frame, text="Hora:", relief=RAISED)
 clients_hour_label.grid(row=4, column=0)
-clients_hour_entry = tk.Entry(registration_frame, width=20)
+clients_hour_entry = tk.Entry(registration_frame, width=20, relief=RAISED)
 clients_hour_entry.grid(row=4, column=1)
 
 
-description_label = tk.Label(registration_frame, text="Descripcion:")
+description_label = tk.Label(registration_frame, text="Descripcion:", relief=RAISED)
 description_label.grid(row=5, column=0)
-description_entry = tk.Entry(registration_frame, width=20)
+description_entry = tk.Entry(registration_frame, width=20, relief=RAISED)
 description_entry.grid(row=5, column=1)
 
 show_products("lala", 5, "registration_frame")
