@@ -1,15 +1,25 @@
-from tkinter import *
+import tkinter as tk
 
-counter = 0
 
-def count():
-    global counter
-    counter += 1
-    lbl.config(text=counter)
-    root.after(1000, count)
+firstclick = True
 
-root = Tk()
-lbl = Label(root, text='0')
-lbl.pack()
-Button(root, text='Start count', command=count).pack()
+def on_entry_click(event):
+    """function that gets called whenever entry1 is clicked"""
+    global firstclick
+
+    if firstclick: # if this is the first time they clicked it
+        firstclick = False
+        entry.delete(0, "end") # delete all the text in the entry
+
+
+root = tk.Tk()
+
+label = tk.Label(root, text="User: ")
+label.pack(side="left")
+
+entry = tk.Entry(root, bd=1)
+entry.insert(0, 'Enter your user name...')
+entry.bind('<FocusIn>', on_entry_click)
+entry.pack(side="left")
+
 root.mainloop()
